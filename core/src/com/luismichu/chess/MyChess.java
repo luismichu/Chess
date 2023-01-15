@@ -1,10 +1,9 @@
 package com.luismichu.chess;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.luismichu.chess.Screen.BoardScreen;
 
 public class MyChess extends Game {
 	SpriteBatch batch;
@@ -12,6 +11,6 @@ public class MyChess extends Game {
 
 	@Override
 	public void create () {
-		setScreen(new Board());
+		setScreen(new BoardScreen());
 	}
 }

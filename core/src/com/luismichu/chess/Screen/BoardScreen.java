@@ -1,8 +1,6 @@
-package com.luismichu.chess;
+package com.luismichu.chess.Screen;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,25 +14,25 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.luismichu.chess.Controller.BoardController;
 
 import java.awt.*;
 
 
-public class Board implements Screen, InputProcessor {
+public class BoardScreen implements Screen {
 	private SpriteBatch batch;
 	private Texture img, bg_dark, bg_brigth;
 	private Stage stage;
 	private Table boardTable;
-	private boolean clicked = false;
-	private int[] clicked_pos;
-
+	private BoardController myBoardController;
 
 	private static final int ORIGINAL = 8;
 	private static final int RESIZED = 11;
 
 	@Override
 	public void show () {
+		myBoardController = new BoardController();
+
 		batch = new SpriteBatch();
 
 		int size = Math.min(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -44,12 +42,11 @@ public class Board implements Screen, InputProcessor {
 
 		stage = new Stage(new FitViewport(size, size));
 		//Gdx.input.setInputProcessor(stage);
-		Gdx.input.setInputProcessor(this);
+		Gdx.input.setInputProcessor(myBoardController);
 
 		createBoardTable();
 		//board();
 
-		clicked_pos = new int[2];
 	}
 
 	@Override
@@ -60,8 +57,8 @@ public class Board implements Screen, InputProcessor {
 		batch.begin();
 		//batch.draw(img, 0, 0);
 		drawBoard();
-		if(clicked)
-			batch.draw(img, clicked_pos[0] - (int)(img.getWidth() / 2), Gdx.graphics.getHeight() - clicked_pos[1] - (int)(img.getHeight() / 2));
+		if(myBoardController.isScreenClicked())
+			batch.draw(img, myBoardController.getScreenClickedPos()[0] - (int)(img.getWidth() / 2), Gdx.graphics.getHeight() - myBoardController.getScreenClickedPos()[1] - (int)(img.getHeight() / 2));
 
 		batch.end();
 
@@ -134,6 +131,9 @@ public class Board implements Screen, InputProcessor {
 		stage.getViewport().update(width, height, true);
 	}
 
+
+	// Screen implemented methods
+
 	@Override
 	public void pause() {
 
@@ -154,55 +154,5 @@ public class Board implements Screen, InputProcessor {
 		batch.dispose();
 		stage.dispose();
 		img.dispose();
-	}
-
-	@Override
-	public boolean keyDown(int keycode) {
-		return false;
-	}
-
-	@Override
-	public boolean keyUp(int keycode) {
-		return false;
-	}
-
-	@Override
-	public boolean keyTyped(char character) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		clicked = true;
-
-		clicked_pos[0] = screenX;
-		clicked_pos[1] = screenY;
-
-		return true;
-	}
-
-	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		clicked = false;
-
-		return false;
-	}
-
-	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		clicked_pos[0] = screenX;
-		clicked_pos[1] = screenY;
-
-		return true;
-	}
-
-	@Override
-	public boolean mouseMoved(int screenX, int screenY) {
-		return false;
-	}
-
-	@Override
-	public boolean scrolled(float amountX, float amountY) {
-		return false;
 	}
 }
