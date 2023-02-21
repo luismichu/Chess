@@ -2,9 +2,11 @@ package com.luismichu.chess.Screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -15,6 +17,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.luismichu.chess.Controller.BoardController;
+import com.luismichu.chess.Model.Piece;
+import com.luismichu.chess.Model.Position;
 
 import java.awt.*;
 
@@ -25,6 +29,10 @@ public class BoardScreen implements Screen {
 	private Stage stage;
 	private Table boardTable;
 	private BoardController myBoardController;
+	private boolean clicked;
+	private boolean clickedFlag;
+	private Position pxToBoard;
+	private ShapeRenderer shapeRenderer;
 
 	private static final int ORIGINAL = 8;
 	private static final int RESIZED = 11;
@@ -34,15 +42,21 @@ public class BoardScreen implements Screen {
 		myBoardController = new BoardController();
 
 		batch = new SpriteBatch();
+		shapeRenderer = new ShapeRenderer();
 
 		int size = Math.min(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		img = resizeTexture("images/no_shadow/128h/b_bishop_png_128px.png", size/RESIZED, size/RESIZED);
-		bg_brigth = resizeTexture("images/no_shadow/128h/square gray light _png_128px.png", size/ORIGINAL, size/ORIGINAL);
-		bg_dark = resizeTexture("images/no_shadow/128h/square gray dark _png_128px.png", size/ORIGINAL, size/ORIGINAL);
+		img = resizeTexture("images/no_shadow/128h/b_bishop_png_128px.png", size/RESIZED);
+		img = resizeTexture("images/no_shadow/128h/b_king_png_128px.png", size/RESIZED);
+		bg_brigth = resizeTexture("images/no_shadow/128h/square gray light _png_128px.png", size/ORIGINAL);
+		bg_dark = resizeTexture("images/no_shadow/128h/square gray dark _png_128px.png", size/ORIGINAL);
 
 		stage = new Stage(new FitViewport(size, size));
 		//Gdx.input.setInputProcessor(stage);
 		Gdx.input.setInputProcessor(myBoardController);
+
+		clicked = false;
+		clickedFlag = false;
+		pxToBoard = new Position();
 
 		createBoardTable();
 		//board();
@@ -57,10 +71,49 @@ public class BoardScreen implements Screen {
 		batch.begin();
 		//batch.draw(img, 0, 0);
 		drawBoard();
-		if(myBoardController.isScreenClicked())
-			batch.draw(img, myBoardController.getScreenClickedPos()[0] - (int)(img.getWidth() / 2), Gdx.graphics.getHeight() - myBoardController.getScreenClickedPos()[1] - (int)(img.getHeight() / 2));
-
 		batch.end();
+
+		if(clickedFlag) {
+			for (Position allowedPosition : myBoardController.allowedMoves(pxToBoard)) {
+				shapeRenderer.setColor(Color.BLACK);
+				shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+				Position pos = boardToPX(allowedPosition);
+				shapeRenderer.circle(pos.X, pos.Y, 20);
+				shapeRenderer.end();
+			}
+		}
+
+		if(myBoardController.isScreenClicked()){
+			if(!clicked) {
+				pxToBoard.X = myBoardController.getScreenClickedPos()[0] / (Gdx.graphics.getWidth() / 8);
+				pxToBoard.Y = 7 - myBoardController.getScreenClickedPos()[1] / (Gdx.graphics.getHeight() / 8);
+				clickedFlag = !clickedFlag;
+			}
+			Piece currPiece = myBoardController.getPiece(pxToBoard);
+			if(currPiece != null && currPiece.getColor() == myBoardController.getColor()) {
+				String type = currPiece.getType().toString().toLowerCase();
+				int size = Math.min(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+				img = resizeTexture("images/no_shadow/128h/w_" + type + "_png_128px.png", size / 9);
+				batch.begin();
+				batch.draw(img, myBoardController.getScreenClickedPos()[0] - (int)(img.getWidth() / 2), Gdx.graphics.getHeight() - myBoardController.getScreenClickedPos()[1] - (int)(img.getHeight() / 2));
+				batch.end();
+			}
+			clicked = true;
+		}
+		else {
+			if(clicked) {
+				Position releasePos = new Position();
+				releasePos.X = myBoardController.getScreenClickedPos()[0] / (Gdx.graphics.getWidth() / 8);
+				releasePos.Y = 7 - myBoardController.getScreenClickedPos()[1] / (Gdx.graphics.getHeight() / 8);
+				for(Position pos : myBoardController.allowedMoves(pxToBoard)) {
+					if (pos.X == releasePos.X && pos.Y == releasePos.Y) {
+						myBoardController.move(pxToBoard, releasePos);
+						break;
+					}
+				}
+			}
+			clicked = false;
+		}
 
 		stage.draw();
 	}
@@ -77,14 +130,17 @@ public class BoardScreen implements Screen {
 				else
 					batch.draw(bg_brigth, positionX, positionY);
 
-
-				positionX += (size/ORIGINAL - size/RESIZED) / 2;
-				positionY += (size/ORIGINAL - size/RESIZED) / 2;
-				batch.draw(img, positionX, positionY);
-
-
-
-				//System.out.println(positionX);
+				Piece currPiece = myBoardController.getPiece(new Position(j, i));
+				if(currPiece != null) {
+					if(!clicked || (pxToBoard.X != j || pxToBoard.Y != i || currPiece.getColor() != myBoardController.getColor())) {
+						String color = currPiece.getColor() == Piece.Color.BLACK ? "b" : "w";
+						String type = currPiece.getType().toString().toLowerCase();
+						img = resizeTexture("images/no_shadow/128h/" + color + "_" + type + "_png_128px.png", size / RESIZED);
+						positionX += (size / ORIGINAL - img.getWidth() * size / RESIZED / img.getHeight()) / 2;
+						positionY += (size / ORIGINAL - size / RESIZED) / 2;
+						batch.draw(img, positionX, positionY);
+					}
+				}
 			}
 		}
 	}
@@ -112,9 +168,9 @@ public class BoardScreen implements Screen {
 		stage.addListener(new InputListener());
 	}
 
-	private Texture resizeTexture(String file, int sizeX, int sizeY){
+	private Texture resizeTexture(String file, int size){
 		Pixmap pixmapOriginal = new Pixmap(Gdx.files.internal(file));
-		Pixmap pixmapResized = new Pixmap(sizeX, sizeY, pixmapOriginal.getFormat());
+		Pixmap pixmapResized = new Pixmap(pixmapOriginal.getWidth() * size / pixmapOriginal.getHeight(), size, pixmapOriginal.getFormat());
 		pixmapResized.drawPixmap(pixmapOriginal,
 				0, 0, pixmapOriginal.getWidth(), pixmapOriginal.getHeight(),
 				0, 0, pixmapResized.getWidth(), pixmapResized.getHeight()
@@ -126,14 +182,19 @@ public class BoardScreen implements Screen {
 		return texture;
 	}
 
+	private Position boardToPX(Position position){
+		int x = (int)(position.X * (Gdx.graphics.getWidth() / 8f) + Gdx.graphics.getWidth() / 8f / 2);
+		int i = (int)(position.Y * (Gdx.graphics.getWidth() / 8f) + Gdx.graphics.getWidth() / 8f / 2);
+
+		return new Position(x, i);
+	}
+
 	@Override
 	public void resize(int width, int height) {
 		stage.getViewport().update(width, height, true);
 	}
 
-
 	// Screen implemented methods
-
 	@Override
 	public void pause() {
 
