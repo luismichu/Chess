@@ -16,7 +16,7 @@ public class DesktopLauncher {
 		int width = 800;
 		int height = 800;
 
-		Graphics.Monitor mon = monitors[1];
+		Graphics.Monitor mon = monitors[monitors.length - 1];
 		Graphics.DisplayMode mode = Lwjgl3ApplicationConfiguration.getDisplayMode(mon);
 		int posX = mon.virtualX + mode.width/2 - width/2;
 		int posY = mon.virtualY + mode.height/2 - height/2;
