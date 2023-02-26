@@ -21,12 +21,14 @@ public class BoardController implements InputProcessor {
 
         board = new Board(color);
         board.placeStandardPieces();
+        board.setPiece(new Piece(Piece.Color.WHITE, Piece.Type.QUEEN), new Position(3, 3));
+        board.setPiece(new Piece(Piece.Color.BLACK, Piece.Type.BISHOP), new Position(4, 4));
 
-        for (int i = 3; i < 6; i++) {
+        /*for (int i = 3; i < 6; i++) {
             for (int j = 0; j < 8; j++) {
                 board.setPiece(new Piece(Piece.Color.BLACK, Piece.Type.PAWN), new Position(j, i));
             }
-        }
+        }*/
 
     }
 
@@ -162,7 +164,7 @@ public class BoardController implements InputProcessor {
     private void checkRook(Array<Position> result, Position position, Piece currPiece) {
         Position pTop = null, pRight = null, pBottom = null, pLeft = null;
         for(Position pos : new Array<>(result)){
-            if(getPiece(pos) != null){
+            if(getPiece(pos) != null && !getPiece(pos).equals(currPiece)){
                 if(pos.X == position.X){
                     if(position.Y < pos.Y) {
                         if(pTop == null || pTop.Y > pos.Y)
@@ -217,7 +219,7 @@ public class BoardController implements InputProcessor {
     private void checkBishop(Array<Position> result, Position position, Piece currPiece) {
         Position pTopRight = null, pTopLeft = null, pBottomRight = null, pBottomLeft = null;
         for(Position pos : new Array<>(result)){
-            if(getPiece(pos) != null){
+            if(getPiece(pos) != null && !getPiece(pos).equals(currPiece)){
                 if(pos.X < position.X){
                     if(pos.Y < position.Y) {
                         if(pBottomLeft == null || pBottomLeft.Y < pos.Y)
@@ -263,9 +265,15 @@ public class BoardController implements InputProcessor {
     }
 
     private void checkKing(Array<Position> result, Position position, Piece currPiece) {
+        for(Position pos : new Array<>(result)) {
+            if (getPiece(pos) != null && getPiece(pos).getColor() == currPiece.getColor())
+                result.removeValue(pos, false);
+        }
     }
 
     private void checkQueen(Array<Position> result, Position position, Piece currPiece) {
+        checkBishop(result, position, currPiece);
+        checkRook(result, position, currPiece);
     }
 
 
