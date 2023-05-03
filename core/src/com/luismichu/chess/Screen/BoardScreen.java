@@ -49,7 +49,7 @@ public class BoardScreen implements Screen {
 
 	@Override
 	public void show () {
-		myBoardController = new BoardController(Piece.Color.WHITE);
+		myBoardController = new BoardController(Piece.Color.BLACK);
 
 		batch = new SpriteBatch();
 		shapeRenderer = new ShapeRenderer();
@@ -134,7 +134,7 @@ public class BoardScreen implements Screen {
 				pxToBoard.Y = clickedPos.Y / (WORLD_PX / 8);
 			}
 			Piece currPiece = myBoardController.getPiece(pxToBoard);
-			if(currPiece != null && currPiece.getColor() == myBoardController.getColor()) {
+			if(currPiece != null /* 2 PLAYER/SINGLE PLAYER */ /* && currPiece.getColor() == myBoardController.getColor() */) {
 				int length = WORLD_PX / ORIGINAL;
 				int height = (int)(length * 0.9);
 				int width = currPiece.getTexture().getWidth() * height / currPiece.getTexture().getHeight();
@@ -179,7 +179,7 @@ public class BoardScreen implements Screen {
 
 				Piece currPiece = myBoardController.getPiece(new Position(j, i));
 				if(currPiece != null) {
-					if(!clicked || (pxToBoard.X != j || pxToBoard.Y != i || currPiece.getColor() != myBoardController.getColor())) {
+					if(!clicked || (pxToBoard.X != j || pxToBoard.Y != i /* 2 PLAYER/SINGLE PLAYER */ /* || currPiece.getColor() != myBoardController.getColor() */)) {
 						int height = (int)(length * RESIZED);
 						int width = currPiece.getTexture().getWidth() * height / currPiece.getTexture().getHeight();
 						positionX += (length - width) / 2;

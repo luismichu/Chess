@@ -51,9 +51,16 @@ public class BoardController implements InputProcessor {
         if(currPiece != null) {
             switch (currPiece.getType()) {
                 case PAWN:
-                    result.add(new Position(position.X, position.Y + 1));
-                    if(position.Y == 1)
-                        result.add(new Position(position.X, position.Y + 2));
+                    int sign = 1;
+                    int doubleStepPos = 1;
+                    if(currPiece.getColor() != board.getColor()) {
+                        sign = -1;
+                        doubleStepPos = 6;
+                    }
+
+                    result.add(new Position(position.X, position.Y + sign));
+                    if(position.Y == doubleStepPos)
+                        result.add(new Position(position.X, position.Y + 2 * sign));
 
                     cleanAllowedMoves(result);
                     checkPawn(result, position, currPiece);
@@ -112,22 +119,33 @@ public class BoardController implements InputProcessor {
                     break;
 
                 case QUEEN:
+                    // Use an aux array for bishop and rook, calculate their moves
+                    // separately then add them together in result array
+                    Array<Position> resultBishop = new Array<>();
+                    Array<Position> resultRook = new Array<>();
                     for (int i = 0; i < 8; i++) {
-                        result.add(new Position(position.X, i));
-                        result.add(new Position(i, position.Y));
-                        result.add(new Position(position.X + i, position.Y + i));
-                        result.add(new Position(position.X + i, position.Y - i));
-                        result.add(new Position(position.X - i, position.Y + i));
-                        result.add(new Position(position.X - i, position.Y - i));
+                        if(i != position.Y)
+                            resultBishop.add(new Position(position.X, i));
+                        if(i != position.X)
+                            resultBishop.add(new Position(i, position.Y));
+
+                        resultRook.add(new Position(position.X + i, position.Y + i));
+                        resultRook.add(new Position(position.X + i, position.Y - i));
+                        resultRook.add(new Position(position.X - i, position.Y + i));
+                        resultRook.add(new Position(position.X - i, position.Y - i));
                     }
 
-                    cleanAllowedMoves(result);
-                    checkQueen(result, position, currPiece);
+                    cleanAllowedMoves(resultBishop);
+                    checkRook(resultBishop, position, currPiece);
+
+                    cleanAllowedMoves(resultRook);
+                    checkBishop(resultRook, position, currPiece);
+
+                    result.addAll(resultBishop);
+                    result.addAll(resultRook);
                     break;
             }
         }
-
-
 
         return result;
     }
@@ -146,8 +164,12 @@ public class BoardController implements InputProcessor {
 
     private void checkPawn(Array<Position> result, Position position, Piece currPiece) {
         Array<Position> positionsKill = new Array<>();
-        positionsKill.add(new Position(position.X + 1, position.Y + 1));
-        positionsKill.add(new Position(position.X - 1, position.Y + 1));
+        int sign = 1;
+        if(currPiece.getColor() != board.getColor())
+            sign = -1;
+
+        positionsKill.add(new Position(position.X + sign, position.Y + sign));
+        positionsKill.add(new Position(position.X - sign, position.Y + sign));
         for(Position pos : new Array<>(result)){
             if(getPiece(pos) != null)
                 result.removeValue(pos, false);
@@ -270,12 +292,6 @@ public class BoardController implements InputProcessor {
                 result.removeValue(pos, false);
         }
     }
-
-    private void checkQueen(Array<Position> result, Position position, Piece currPiece) {
-        checkBishop(result, position, currPiece);
-        checkRook(result, position, currPiece);
-    }
-
 
     public void move(Position initPos, Position newPos) {
         Piece toMove = board.delPiece(initPos);
