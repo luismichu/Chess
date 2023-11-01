@@ -12,9 +12,9 @@ public class BoardController implements InputProcessor {
     private boolean screenClicked;
     private int[] screenClickedPos;
     private Board board;
+    private Piece.Color currColor;
 
 
-    // Constructor TODO add color to board
     public BoardController(Piece.Color color){
         screenClicked = false;
         screenClickedPos = new int[2];
@@ -23,6 +23,8 @@ public class BoardController implements InputProcessor {
         board.placeStandardPieces();
         board.setPiece(new Piece(Piece.Color.WHITE, Piece.Type.QUEEN), new Position(3, 3));
         board.setPiece(new Piece(Piece.Color.BLACK, Piece.Type.BISHOP), new Position(4, 4));
+
+        currColor = color;
 
         /*for (int i = 3; i < 6; i++) {
             for (int j = 0; j < 8; j++) {
@@ -293,9 +295,14 @@ public class BoardController implements InputProcessor {
         }
     }
 
+    public void changeColor(){
+        currColor = currColor == Piece.Color.WHITE ? Piece.Color.BLACK : Piece.Color.WHITE;
+    }
+
     public void move(Position initPos, Position newPos) {
         Piece toMove = board.delPiece(initPos);
         board.setPiece(toMove, newPos);
+        changeColor();
     }
 
     public Piece.Color getColor(){
@@ -318,6 +325,13 @@ public class BoardController implements InputProcessor {
         this.screenClickedPos = screenClickedPos;
     }
 
+    public Piece.Color getCurrColor() {
+        return currColor;
+    }
+
+    public void setCurrColor(Piece.Color currColor) {
+        this.currColor = currColor;
+    }
 
     // InputProcessor implemented methods
     @Override
